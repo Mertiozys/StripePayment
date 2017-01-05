@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database defaultIdMethod="native" name="thelia" >
 
+    <table name="stripe_customer" namespace="StripePayment\Model">
+        <column name="id" autoIncrement="true" primaryKey="true" required="true" type="INTEGER" />
+        <column name="customer_id" required="true" type="INTEGER" />
+        <column name="stripe_customer_id" required="true" type="VARCHAR" size="255" />
+        <foreign-key foreignTable="customer" name="fk_stripe_customer_customer_id" onDelete="CASCADE">
+            <reference foreign="id" local="customer_id" />
+        </foreign-key>
+        <behavior name="timestampable" />
+    </table>
+
     <external-schema filename="local/config/schema.xml" referenceOnly="true" />
 </database>

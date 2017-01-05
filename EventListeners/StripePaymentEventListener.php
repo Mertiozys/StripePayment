@@ -265,7 +265,7 @@ class StripePaymentEventListener implements EventSubscriberInterface
 
     /**
      * Check if the amount displayed by Stripe and the order amount are the same
-     * (in case once Stripe popup is displayed, the customer adds or removes a product from another tab)
+     * (to avoid the customer adds or removes products from another tab once Stripe popup is displayed)
      * @param OrderModel $order
      * @throws StripePaymentException
      */
