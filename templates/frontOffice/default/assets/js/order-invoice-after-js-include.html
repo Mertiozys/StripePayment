@@ -1,3 +1,4 @@
+{if !$stripe_customer}
 <script>
 
     // Stripe handler
@@ -19,7 +20,7 @@
         // If Stripe is selected
         if ($('form#form-cart-payment input#payment_{$stripe_module_id}').is(':checked')) {
 
-            // If Stripe token is filled, prepare data to be displayed in Stripe card form
+            // If Stripe token is empty, prepare data to be displayed in Stripe card form
             if ($("#stripe_token").val() == '') {
 
                 // Get currency and format order amount for Stripe
@@ -48,3 +49,4 @@
         handler.close();
     });
 </script>
+{/if}

@@ -1,0 +1,20 @@
+<div class="row">
+  <div class="col-md-12 general-block-decorator">
+    <div class="row">
+      <div class="col-md-12 title title-without-tabs">
+        {intl l="Stripe - charge customer" d='stripepayment.bo.default'}
+      </div>
+
+      <div class="col-md-12">
+        <form action="{url path='/admin/module/StripePayment/charge-customer'}" method="post">
+          <input type="hidden" name="customer_id" value="{$customer_id}">
+          <div class="form-group">
+            <label for="charge-amount">{intl l='Charging amount' d='stripepayment.bo.default'}</label>
+            <input type="number" step="any" name="charge_amount" id="charge-amount" class="form-control" value="">
+          </div>
+          <button type="submit" class="btn btn-primary">{intl l='Charge customer' d='stripepayment.bo.default'}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

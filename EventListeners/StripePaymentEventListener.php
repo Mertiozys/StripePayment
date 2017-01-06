@@ -4,6 +4,7 @@ namespace StripePayment\EventListeners;
 
 use StripePayment\Classes\StripePaymentException;
 use StripePayment\Classes\StripePaymentLog;
+use StripePayment\Model\StripeCustomerQuery;
 use StripePayment\StripePayment;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -85,17 +86,24 @@ class StripePaymentEventListener implements EventSubscriberInterface
      */
     public function getStripeTokenAndAmount()
     {
-        // Get Stripe token
-        $this->request->getSession()->set(
-            'stripeToken',
-            $this->request->get('thelia_order_payment')['stripe_token']
-        );
+        if (isset($this->request->get('thelia_order_payment')['stripe_token']) &&
+            isset($this->request->get('thelia_order_payment')['stripe_amount'])
+        ) {
+            // Get Stripe token
+            $this->request->getSession()->set(
+                'stripeToken',
+                $this->request->get('thelia_order_payment')['stripe_token']
+            );
 
-        // Get order amount
-        $this->request->getSession()->set(
-            'stripeAmount',
-            $this->request->get('thelia_order_payment')['stripe_amount']
-        );
+            // Get order amount
+            $this->request->getSession()->set(
+                'stripeAmount',
+                $this->request->get('thelia_order_payment')['stripe_amount']
+            );
+        } else {
+            $this->request->getSession()->remove('stripeToken');
+            $this->request->getSession()->remove('stripeAmount');
+        }
     }
 
     /**
@@ -126,15 +134,20 @@ class StripePaymentEventListener implements EventSubscriberInterface
         \Stripe\Stripe::setApiKey(StripePayment::getConfigValue('secret_key'));
 
         try {
+            // If the customer has no Stripe customer token saved, use session token information, else use DB token
+            if (null === $stripeCustomer = StripeCustomerQuery::create()->findOneByCustomerId($order->getCustomerId())) {
+                // Check order amount
+                $this->checkOrderAmount($order);
 
-            // Check order amount
-            $this->checkOrderAmount($order);
+                // Create the charge on Stripe's servers - this will charge the user's card
+                $this->stripeChargeFromSessionToken($order);
 
-            // Create the charge on Stripe's servers - this will charge the user's card
-            $this->stripeCharge($order);
-
-            // Save Stripe token into order transaction reference
-            $this->saveStripeToken($order);
+                // Save Stripe token into order transaction reference
+                $this->saveStripeToken($order);
+            } else {
+                // Create the charge on Stripe's servers - this will charge the user's card
+                $this->stripeChargeFromStripeCustomerToken($order, $stripeCustomer->getStripeCustomerId());
+            }
 
             // Set 'paid' status to the order
             $this->changeOrderStatus($event);
@@ -290,7 +303,7 @@ class StripePaymentEventListener implements EventSubscriberInterface
      * @param OrderModel $order
      * @return \Stripe\Charge
      */
-    public function stripeCharge(OrderModel $order)
+    public function stripeChargeFromSessionToken(OrderModel $order)
     {
         $stripeApiCustomer = \Stripe\Customer::create(
             [
@@ -302,6 +315,17 @@ class StripePaymentEventListener implements EventSubscriberInterface
         \Stripe\Charge::create(
             [
                 'customer' => $stripeApiCustomer,
+                'amount' => $order->getTotalAmount() * 100,
+                'currency' => $order->getCurrency()->getCode()
+            ]
+        );
+    }
+
+    public function stripeChargeFromStripeCustomerToken(OrderModel $order, $stripeCustomerId)
+    {
+        \Stripe\Charge::create(
+            [
+                'customer' => $stripeCustomerId,
                 'amount' => $order->getTotalAmount() * 100,
                 'currency' => $order->getCurrency()->getCode()
             ]

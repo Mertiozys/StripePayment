@@ -1,0 +1,39 @@
+<script src="https://checkout.stripe.com/checkout.js"></script>
+
+<script>
+    // Stripe handler
+    var handler = StripeCheckout.configure({
+        key: '{$public_key}',
+        locale: 'auto',
+        token: function(token) {
+            // When Stripe card form is submitted, get Stripe token
+            $("#stripe_token").val(token.id);
+
+            // Submit invoice form
+            $("#stripe-card-saving-form").submit();
+        }
+    });
+
+    $('#stripe-card-saving-form').on('submit', function (e) {
+        $(this).children('button').prop('disabled', true);
+
+        // If Stripe token is filled, prepare data to be displayed in Stripe card form
+        if ($("#stripe_token").val() == '') {
+            // Open Checkout with further options
+            handler.open({
+                name: '{config key="store_name"}',
+                email: '{customer attr="email"}',
+                allowRememberMe: false
+            });
+
+            e.preventDefault();
+        }
+
+        $(this).children('button').prop('disabled', false);
+    });
+
+    // Close Checkout on page navigation
+    $(window).on('popstate', function () {
+        handler.close();
+    });
+</script>

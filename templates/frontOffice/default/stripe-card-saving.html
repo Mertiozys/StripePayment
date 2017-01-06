@@ -1,0 +1,18 @@
+<form action="{url path='/stripe/save-customer-card'}" method="post" id="stripe-card-saving-form">
+    <input type="hidden" name="stripe_token" id="stripe_token" value="">
+
+    {if $stripe_customer}
+        <button type="submit" class="btn btn-primary">{intl l='Update credit card information for 1-click payment'}</button>
+        <div>
+            <small>
+                <em>
+                    {intl l="For security reasons, we don't keep your credit card information and so can't show your registered card number."}<br>
+                    {intl l='Updating credit card information will remove the previous one.'}
+
+                </em>
+            </small>
+        </div>
+    {else}
+        <button type="submit" class="btn btn-primary">{intl l='Save credit card information for 1-click payment'}</button>
+    {/if}
+</form>
